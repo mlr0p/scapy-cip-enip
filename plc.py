@@ -97,7 +97,10 @@ class PLCClient(object):
             ENIP_SendUnitData_Item() / ENIP_ConnectionAddress(connection_id=self.enip_connid),
             ENIP_SendUnitData_Item() / ENIP_ConnectionPacket(sequence=self.sequence) / cippkt
         ])
-        self.sequence += 1
+        if self.sequence >= (1<<16 - 1):
+            self.sequence = 0
+        else:
+            self.sequence += 1
         if self.sock is not None:
             self.sock.send(str(enippkt))
 

@@ -217,7 +217,7 @@ class CIP_Path(scapy_all.Packet):
         return "", p
 
     @classmethod
-    def make(cls, class_id=None, instance_id=None, member_id=None, attribute_id=None):
+    def make(cls, class_id=None, instance_id=None, member_id=None, attribute_id=None, word_size=None):
         """Create a CIP_Path from its attributes"""
         content = b""
         if class_id is not None:
@@ -242,11 +242,12 @@ class CIP_Path(scapy_all.Packet):
             else:  # 16-bit attribute ID
                 content += b"\x31\0" + struct.pack("<H", attribute_id)
 
-        return cls(wordsize=len(content) // 2, path=content)
+        return cls(wordsize=word_size, path=content)
 
     @classmethod
     def make_str(cls, name):
-        content = struct.pack('BB', 0x91, len(name)) + name.encode('ascii')
+        # content = struct.pack('BB', 0x91, len(name)) + name
+        content = struct.pack('BB', 0x91, 10) + name
         if len(content) & 1:
             content += b'\0'
         return cls(wordsize=len(content) // 2, path=content)
@@ -467,9 +468,11 @@ class CIP_ReqForwardOpen(scapy_all.Packet):
         scapy_all.ByteField("connection_timeout_multiplier", 0),
         scapy_all.X3BytesField("reserved", 0),
         scapy_all.LEIntField("OT_rpi", 0x007a1200),  # 8000 ms
-        scapy_all.PacketField('OT_connection_param', CIP_ConnectionParam(), CIP_ConnectionParam),
+        scapy_all.LEShortField('OT_connection_param', 0x43f9),
+        # scapy_all.PacketField('OT_connection_param', CIP_ConnectionParam(), CIP_ConnectionParam()),
         scapy_all.LEIntField("TO_rpi", 0x007a1200),
-        scapy_all.PacketField('TO_connection_param', CIP_ConnectionParam(), CIP_ConnectionParam),
+        scapy_all.LEShortField('TO_connection_param', 0x43f9),
+        # scapy_all.PacketField('TO_connection_param', CIP_ConnectionParam(), CIP_ConnectionParam()),
         scapy_all.XByteField("transport_type", 0xa3),  # direction server, application object, class 3
         scapy_all.ByteField("path_wordsize", None),
         CIP_PathField("path", None, length_from=lambda p: 2 * p.path_wordsize),
